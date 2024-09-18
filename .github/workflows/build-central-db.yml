@@ -3,7 +3,7 @@ name: Build Central DB Image
 on:
   push:
     tags:
-      - '*' # This will trigger the workflow on every tag push
+      - '*' # Trigger workflow on every tag push
 
 jobs:
   build:
@@ -41,18 +41,15 @@ jobs:
 
       - name: Build Central DB Container
         run: |
-          docker build \
+          docker buildx build \
             --file image/postgres/konflux.Dockerfile \
+            --platform linux/amd64 \
             --tag ${{ env.IMAGE_NAME }}:${{ github.ref }} \
             --build-arg REVISION=${{ env.REVISION }} \
             --build-arg REPO_URL=${{ env.REPO_URL }} \
-            .
+            --push
 
-      - name: Push Docker Image to GHCR
-        run: |
-          docker push ${{ env.IMAGE_NAME }}:${{ github.ref }}
-
-      - name: Image Expiration Tag
+      - name: Add Expiration Tag
         run: |
           docker tag ${{ env.IMAGE_NAME }}:${{ github.ref }} ${{ env.IMAGE_NAME }}:${{ env.IMAGE_EXPIRATION }}
 
@@ -60,4 +57,3 @@ jobs:
         run: docker builder prune -f
 
     timeout-minutes: 100
-7
